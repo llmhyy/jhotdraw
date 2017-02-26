@@ -10,26 +10,85 @@
  */
 package org.jhotdraw.samples.svg.io;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import org.jhotdraw.gui.filechooser.ExtensionFileFilter;
+import static org.jhotdraw.draw.AttributeKeys.FILL_COLOR;
+import static org.jhotdraw.draw.AttributeKeys.FONT_BOLD;
+import static org.jhotdraw.draw.AttributeKeys.FONT_FACE;
+import static org.jhotdraw.draw.AttributeKeys.FONT_ITALIC;
+import static org.jhotdraw.draw.AttributeKeys.FONT_SIZE;
+import static org.jhotdraw.draw.AttributeKeys.FONT_UNDERLINE;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_CAP;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_COLOR;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_DASHES;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_DASH_PHASE;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_JOIN;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_MITER_LIMIT;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_WIDTH;
+import static org.jhotdraw.draw.AttributeKeys.TRANSFORM;
+import static org.jhotdraw.draw.AttributeKeys.WINDING_RULE;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.FILL_GRADIENT;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.FILL_OPACITY;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.LINK;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.LINK_TARGET;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.OPACITY;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.STROKE_GRADIENT;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.STROKE_OPACITY;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.VIEWPORT_FILL;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.VIEWPORT_FILL_OPACITY;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.VIEWPORT_HEIGHT;
+import static org.jhotdraw.samples.svg.SVGAttributeKeys.VIEWPORT_WIDTH;
+import static org.jhotdraw.samples.svg.SVGConstants.SVG_MIMETYPE;
+import static org.jhotdraw.samples.svg.SVGConstants.SVG_NAMESPACE;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+import javax.swing.JComponent;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.StyledDocument;
+
+import org.jhotdraw.draw.AttributeKey;
+import org.jhotdraw.draw.AttributeKeys.WindingRule;
+import org.jhotdraw.draw.BezierFigure;
+import org.jhotdraw.draw.Drawing;
+import org.jhotdraw.draw.Figure;
 import org.jhotdraw.draw.io.OutputFormat;
-import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.geom.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.text.*;
-import net.n3.nanoxml.*;
-import org.jhotdraw.draw.*;
-import org.jhotdraw.geom.*;
-import org.jhotdraw.gui.datatransfer.*;
-import org.jhotdraw.io.*;
-import org.jhotdraw.samples.svg.*;
-import org.jhotdraw.samples.svg.figures.*;
-import static org.jhotdraw.samples.svg.SVGAttributeKeys.*;
-import static org.jhotdraw.samples.svg.SVGConstants.*;
+import org.jhotdraw.geom.BezierPath;
+import org.jhotdraw.gui.datatransfer.InputStreamTransferable;
+import org.jhotdraw.gui.filechooser.ExtensionFileFilter;
+import org.jhotdraw.io.Base64;
+import org.jhotdraw.samples.svg.Gradient;
+import org.jhotdraw.samples.svg.LinearGradient;
+import org.jhotdraw.samples.svg.RadialGradient;
+import org.jhotdraw.samples.svg.figures.SVGEllipseFigure;
+import org.jhotdraw.samples.svg.figures.SVGGroupFigure;
+import org.jhotdraw.samples.svg.figures.SVGImageFigure;
+import org.jhotdraw.samples.svg.figures.SVGPathFigure;
+import org.jhotdraw.samples.svg.figures.SVGRectFigure;
+import org.jhotdraw.samples.svg.figures.SVGTextAreaFigure;
+import org.jhotdraw.samples.svg.figures.SVGTextFigure;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import net.n3.nanoxml.IXMLElement;
+import net.n3.nanoxml.XMLElement;
+import net.n3.nanoxml.XMLWriter;
 
 /**
  * An output format for storing drawings as
